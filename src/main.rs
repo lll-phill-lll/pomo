@@ -85,17 +85,18 @@ const DIGITS: [&[&str]; 10] = [
 
 fn draw_tomato(percentage: f32) {
     let tomato_template = [
-        "          ███████          ",
-        "        ██░░░░░░██        ",
-        "      ██░░░░░░░░░░██      ",
-        "    ██░░░░██░░██░░░░██    ",
-        "    ██░░░░██░░██░░░░██    ",
-        "  ██░░░░░░░░░░░░░░░░░░██  ",
-        "  ██░░░░░░░░░░░░░░░░░░██  ",
-        "  ██░░██░░░░░░░░░░██░░██  ",
+        "           ██     █       ",
+        "        ███ ██  ██        ",
+        "    ████░░██░███░░████    ",
+        "  ██░░░░░█░░██░░░██░░░██  ",
+        "██░░░░░░░░░█░░░░░░░█░░░░██",
+        "██░░░░░░░░░░░░░░░░░░░░░░██",
+        "██░░░░░░░░░░░░░░░░░░░░░░██",
+        "██░░░░░░░░░░░░░░░░░░░░░░██",
+        "██░░░██░░░░░░░░░░░░░░░░░██",
+        "  ██░░░░██░░░░░░░░░░░░██  ",
         "    ██░░░░░░░░░░░░░░██    ",
-        "      ████░░░░░░████      ",
-        "        ██████████        ",
+        "      ██████████████      ",
         "                          ",
     ];
 
@@ -104,13 +105,13 @@ fn draw_tomato(percentage: f32) {
     for (i, line) in tomato_template.iter().enumerate() {
         if i < filled_lines {
             stdout()
-                .execute(SetForegroundColor(Color::Red))
+                .execute(SetForegroundColor(Color::Green))
                 .unwrap()
                 .execute(Print(line))
                 .unwrap();
         } else {
             stdout()
-                .execute(SetForegroundColor(Color::DarkGrey))
+                .execute(SetForegroundColor(Color::Red))
                 .unwrap()
                 .execute(Print(line))
                 .unwrap();
@@ -135,6 +136,7 @@ fn draw_graphic_timer(minutes: u64, seconds: u64) {
     ];
 
     for row in 0..5 {
+        print!(" ");
         for part in &timer_graphic {
             print!("{}", part[row]);
             print!("  "); // Отступ между цифрами
