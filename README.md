@@ -7,3 +7,7 @@
 image: tree, tomato
 
 duration: minutes 
+
+![10 sec passed](img/1.jpeg)
+
+![59 sec passed](img/2.jpeg)
