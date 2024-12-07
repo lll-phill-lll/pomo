@@ -68,6 +68,7 @@ impl Image for TreeImage {
                         'W' => constants::WHITE,
                         'M' => constants::MAGENTA,
                         'Y' => constants::YELLOW,
+                        'B' => constants::BLACK,
                         _ => constants::EMPTY_COLOR,
                     };
 
