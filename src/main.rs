@@ -1,15 +1,12 @@
-use crossterm::{
-    cursor, execute,
-    style::{Color, Print, ResetColor, SetForegroundColor},
-    terminal::{Clear, ClearType},
-    ExecutableCommand,
-};
-use std::io::{stdout, Write};
-use std::{thread, time::Duration};
+use std::{env, process};
+use std::thread;
+use std::time::Duration;
 
-const TIMER_DURATION: u64 = 1; // Длительность таймера в минутах
+mod constants;
 
-// Графическое представление цифр (5x3)
+mod images;
+use images::{Image, TomatoImage, TreeImage};
+
 const DIGITS: [&[&str]; 10] = [
     &[
         "███",
@@ -83,45 +80,6 @@ const DIGITS: [&[&str]; 10] = [
     ],
 ];
 
-const TOMATO_TEMPLATE : [&str; 13]= [
-    "           ██     █       ",
-    "        ███ ██  ██        ",
-    "    ████░░██░███░░████    ",
-    "  ██░░░░░█░░██░░░██░░░██  ",
-    "██░░░░░░░░░█░░░░░░░█░░░░██",
-    "██░░░░░░░░░░░░░░░░░░░░░░██",
-    "██░░░░░░░░░░░░░░░░░░░░░░██",
-    "██░░░░░░░░░░░░░░░░░░░░░░██",
-    "██░░░██░░░░░░░░░░░░░░░░░██",
-    "  ██░░░░██░░░░░░░░░░░░██  ",
-    "    ██░░░░░░░░░░░░░░██    ",
-    "      ██████████████      ",
-    "                          ",
-];
-
-fn draw_tomato(percentage: f32) {
-
-    let filled_lines = (percentage * TOMATO_TEMPLATE.len() as f32).round() as usize;
-
-    for (i, line) in TOMATO_TEMPLATE.iter().enumerate() {
-        if i < filled_lines {
-            stdout()
-                .execute(SetForegroundColor(Color::Green))
-                .unwrap()
-                .execute(Print(line))
-                .unwrap();
-        } else {
-            stdout()
-                .execute(SetForegroundColor(Color::Red))
-                .unwrap()
-                .execute(Print(line))
-                .unwrap();
-        }
-        println!();
-    }
-    stdout().execute(ResetColor).unwrap();
-}
-
 fn draw_graphic_timer(minutes: u64, seconds: u64) {
     let min_tens = (minutes / 10) as usize;
     let min_ones = (minutes % 10) as usize;
@@ -146,21 +104,32 @@ fn draw_graphic_timer(minutes: u64, seconds: u64) {
     }
 }
 
+fn create_image(image_type: &str) -> Box<dyn Image> {
+    match image_type.to_lowercase().as_str() {
+        "tomato" => Box::new(TomatoImage::new()),
+        "tree" => Box::new(TreeImage::new()),
+        _ => {
+            eprintln!("Wrong image, '{}' is not supported. Available: 'tomato', 'tree'.", image_type);
+            process::exit(1);
+        }
+    }
+}
 
-fn main() {
-    let total_seconds = TIMER_DURATION * 60;
+fn clear_screen() {
+    print!("\x1B[2J\x1B[H");
+}
+
+fn run_animation(image: Box<dyn Image>, duration: u64) {
     let mut elapsed_seconds = 0;
+    let total_seconds = duration * 60;
 
     loop {
         let percentage = elapsed_seconds as f32 / total_seconds as f32;
 
-        stdout()
-            .execute(Clear(ClearType::All))
-            .unwrap()
-            .execute(cursor::MoveTo(0, 0))
-            .unwrap();
+        clear_screen();
 
-        draw_tomato(percentage);
+
+        println!("{}", image.get_string(percentage));
         draw_graphic_timer(
             (total_seconds - elapsed_seconds) / 60,
             (total_seconds - elapsed_seconds) % 60,
@@ -173,8 +142,23 @@ fn main() {
         thread::sleep(Duration::from_secs(1));
         elapsed_seconds += 1;
     }
+}
 
-    stdout()
-        .execute(Print("Pomodoro завершён!\n"))
-        .unwrap();
+fn main() {
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() < 3 {
+        eprintln!("Usage: {} <image_type> <duration_min>", args[0]);
+        eprintln!("Exanple: {} tomato 5", args[0]);
+        process::exit(1);
+    }
+
+    let image_type = &args[1];
+    let duration: u64 = args[2].parse().unwrap_or_else(|_| {
+        eprintln!("Error: time must be int minutes.");
+        process::exit(1);
+    });
+
+    let image = create_image(image_type);
+    run_animation(image, duration);
 }
