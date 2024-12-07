@@ -5,104 +5,7 @@ use std::time::Duration;
 mod constants;
 
 mod images;
-use images::{Image, TomatoImage, TreeImage};
-
-const DIGITS: [&[&str]; 10] = [
-    &[
-        "███",
-        "█ █",
-        "█ █",
-        "█ █",
-        "███",
-    ],
-    &[
-        "  █",
-        "  █",
-        "  █",
-        "  █",
-        "  █",
-    ],
-    &[
-        "███",
-        "  █",
-        "███",
-        "█  ",
-        "███",
-    ],
-    &[
-        "███",
-        "  █",
-        "███",
-        "  █",
-        "███",
-    ],
-    &[
-        "█ █",
-        "█ █",
-        "███",
-        "  █",
-        "  █",
-    ],
-    &[
-        "███",
-        "█  ",
-        "███",
-        "  █",
-        "███",
-    ],
-    &[
-        "███",
-        "█  ",
-        "███",
-        "█ █",
-        "███",
-    ],
-    &[
-        "███",
-        "  █",
-        "  █",
-        "  █",
-        "  █",
-    ],
-    &[
-        "███",
-        "█ █",
-        "███",
-        "█ █",
-        "███",
-    ],
-    &[
-        "███",
-        "█ █",
-        "███",
-        "  █",
-        "███",
-    ],
-];
-
-fn draw_graphic_timer(minutes: u64, seconds: u64) {
-    let min_tens = (minutes / 10) as usize;
-    let min_ones = (minutes % 10) as usize;
-    let sec_tens = (seconds / 10) as usize;
-    let sec_ones = (seconds % 10) as usize;
-
-    let timer_graphic = vec![
-        DIGITS[min_tens],
-        DIGITS[min_ones],
-        &[" ██ ", " ██ ", "    ", " ██ ", " ██ "],
-        DIGITS[sec_tens],
-        DIGITS[sec_ones],
-    ];
-
-    for row in 0..5 {
-        print!(" ");
-        for part in &timer_graphic {
-            print!("{}", part[row]);
-            print!("  ");
-        }
-        println!();
-    }
-}
+use images::{Image, Clock, DefaultClock, TomatoImage, TreeImage};
 
 fn create_image(image_type: &str) -> Box<dyn Image> {
     match image_type.to_lowercase().as_str() {
@@ -115,25 +18,25 @@ fn create_image(image_type: &str) -> Box<dyn Image> {
     }
 }
 
-fn clear_screen() {
-    print!("\x1B[2J\x1B[H");
+fn create_clock() -> Box<dyn Clock> {
+    Box::new(DefaultClock::new())
 }
 
-fn run_animation(image: Box<dyn Image>, duration: u64) {
+fn clear_screen() {
+    println!("{}", constants::CRLF);
+}
+
+fn run_animation(image: Box<dyn Image>, clock: Box<dyn Clock>, duration: u64) {
     let mut elapsed_seconds = 0;
     let total_seconds = duration * 60;
 
     loop {
-        let percentage = elapsed_seconds as f32 / total_seconds as f32;
+        let percentage = elapsed_seconds * 100 / total_seconds;
 
         clear_screen();
 
-
         println!("{}", image.get_string(percentage));
-        draw_graphic_timer(
-            (total_seconds - elapsed_seconds) / 60,
-            (total_seconds - elapsed_seconds) % 60,
-        );
+        println!("{}", clock.get_string(elapsed_seconds / 60, elapsed_seconds % 60));
 
         if elapsed_seconds >= total_seconds {
             break;
@@ -160,5 +63,6 @@ fn main() {
     });
 
     let image = create_image(image_type);
-    run_animation(image, duration);
+    let clock = create_clock();
+    run_animation(image, clock, duration);
 }

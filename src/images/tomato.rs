@@ -1,54 +1,83 @@
+use crate::constants;
 use super::Image;
 
-use crate::constants::{FILLED_COLOR, EMPTY_COLOR, RESET_COLOR};
-
-/// TomatoImage implementation
 pub struct TomatoImage {
     template: Vec<&'static str>,
+    color_map: Vec<Vec<char>>,
 }
 
 impl TomatoImage {
     pub fn new() -> Self {
-        Self {
-            template: vec![
-                "           ██     █       ",
-                "        ███ ██  ██        ",
-                "    ████░░██░███░░████    ",
-                "  ██░░░░░█░░██░░░██░░░██  ",
-                "██░░░░░░░░░█░░░░░░░█░░░░██",
-                "██░░░░░░░░░░░░░░░░░░░░░░██",
-                "██░░░░░░░░░░░░░░░░░░░░░░██",
-                "██░░░░░░░░░░░░░░░░░░░░░░██",
-                "██░░░██░░░░░░░░░░░░░░░░░██",
-                "  ██░░░░██░░░░░░░░░░░░██  ",
-                "    ██░░░░░░░░░░░░░░██    ",
-                "      ██████████████      ",
-            ],
-        }
+        let template = vec![
+            "           ██     █       ",
+            "        ███ ██  ██        ",
+            "    ████░░██░███░░████    ",
+            "  ██░░░░░█░░██░░░██░░░██  ",
+            "██░░░░░░░░░█░░░░░░░█░░░░██",
+            "██░░░░░░░░░░░░░░░░░░░░░░██",
+            "██░░░░░░░░░░░░░░░░░░░░░░██",
+            "██░░░░░░░░░░░░░░░░░░░░░░██",
+            "██░░░██░░░░░░░░░░░░░░░░░██",
+            "  ██░░░░██░░░░░░░░░░░░██  ",
+            "    ██░░░░░░░░░░░░░░██    ",
+            "      ██████████████      ",
+        ];
+
+        let color_map = vec![
+            "           RG     G       ",
+            "        RRR GG  GG        ",
+            "    RRRRRRGGRGGGRRRRRR    ",
+            "  RRRRRRRGRRGGRRRGGRRRRR  ",
+            "RRRRRRRRRRRGRRRRRRRGRRRRRR",
+            "RRRRRRRRRRRRRRRRRRRRRRRRRR",
+            "RRRRRRRRRRRRRRRRRRRRRRRRRR",
+            "RRRRRRRRRRRRRRRRRRRRRRRRRR",
+            "RRRRRRRRRRRRRRRRRRRRRRRRRR",
+            "  RRRRRRRRRRRRRRRRRRRRRR  ",
+            "    RRRRRRRRRRRRRRRRRR    ",
+            "      RRRRRRRRRRRRRR      ",
+        ]
+        .iter()
+        .map(|line| line.chars().collect())
+        .collect();
+
+        Self { template, color_map }
     }
 }
 
 impl Image for TomatoImage {
-    fn get_string(&self, percentage: f32) -> String {
-        // skip all space symbols while counting how many symbols to color
+    fn get_string(&self, percentage: u64) -> String {
         let total_pixels: usize = self
             .template
             .iter()
             .flat_map(|line| line.chars())
             .filter(|&ch| ch != ' ')
             .count();
-        let filled_pixels = (percentage * total_pixels as f32).round() as usize;
+
+        let filled_pixels = (percentage * total_pixels as u64) / 100;
 
         let mut filled_count = 0;
         let mut result = String::new();
 
-        for line in &self.template {
-            for ch in line.chars() {
+        for (i, line) in self.template.iter().enumerate() {
+            for (j, ch) in line.chars().enumerate() {
                 if ch != ' ' && filled_count < filled_pixels {
-                    result.push_str(&format!("{}{}{}", FILLED_COLOR, ch, RESET_COLOR));
+                    // Получаем цвет из карты
+                    let color_char = self.color_map[i][j];
+                    let color = match color_char {
+                        'R' => constants::RED,
+                        'G' => constants::GREEN,
+                        _ => constants::EMPTY_COLOR,
+                    };
+
+                    result.push_str(&color);
+                    result.push(ch);
+                    result.push_str(&constants::RESET_COLOR);
                     filled_count += 1;
                 } else if ch != ' ' {
-                    result.push_str(&format!("{}{}{}", EMPTY_COLOR, ch, RESET_COLOR));
+                    result.push_str(constants::EMPTY_COLOR);
+                    result.push(ch);
+                    result.push_str(&constants::RESET_COLOR);
                 } else {
                     result.push(' ');
                 }
@@ -59,3 +88,4 @@ impl Image for TomatoImage {
         result
     }
 }
+
